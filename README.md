@@ -1,1 +1,1 @@
-![Vercel Deploy](https://deploy-badge.vercel.app/vercel/maxins-blog?style=plastic) ![License](https://img.shields.io/badge/license-MIT-blue)
+![Vercel Deploy](https://vercelbadge.vercel.app/api/liquidhiter/maxins_blog) ![License](https://img.shields.io/badge/license-MIT-blue)
