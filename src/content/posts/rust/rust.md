@@ -5,7 +5,7 @@ updated: 2024-12-25
 description: 'Self-paced learning of Rust'
 image: ''
 tags: [Rust]
-category: 'Programming_Language'
+category: 'Programming Language'
 draft: false
 ---
 
