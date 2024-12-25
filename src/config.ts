@@ -42,6 +42,7 @@ export const navBarConfig: NavBarConfig = {
     LinkPreset.Home,
     LinkPreset.Archive,
     LinkPreset.About,
+    // TODO: Add a gallery page
     // LinkPreset.Gallery,
     // {
     //   name: 'GitHub',
