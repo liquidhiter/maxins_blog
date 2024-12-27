@@ -1,5 +1,5 @@
 ---
-title: deep_dive_in_cpp
+title: "Deep Dive in C++"
 published: 2024-12-26
 description: ''
 image: ''

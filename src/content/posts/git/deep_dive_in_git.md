@@ -1,5 +1,5 @@
 ---
-title: deep_dive_in_git
+title: "Deep Dive in GIT"
 published: 2024-12-27
 description: ''
 image: ''
