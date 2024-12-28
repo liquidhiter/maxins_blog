@@ -1,7 +1,7 @@
 ---
 title: "Deep Dive in GIT"
 published: 2024-12-27
-description: ''
+description: 'Understand git a bit more'
 image: ''
 tags: [git]
 category: 'git'
@@ -280,3 +280,7 @@ if __name__ == '__main__':
     git_command = " ".join(sys.argv[1:])
     git_wrapper(git_command)
 ```
+
+## Side Notes
+- `.git/HEAD` file has a newline at the end
+- `.git/HEAD` contains either `ref: refs/heads/main\n` or `ref:refs/heads/master\n`
