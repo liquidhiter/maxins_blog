@@ -150,3 +150,195 @@ void MyTemplateClass<T>::printPretty() const {
 
 ```
 
+`CMakeLists.txt`
+
+```cmake
+cmake_minimum_required(VERSION 3.20)
+
+set(TARGET "template_class")
+project(
+    ${TARGET}
+    VERSION 1.0.0
+    LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+option(__TEMPLATE_CLASS_IMPL_ "Enable to add template class implementation." OFF)
+option(__TEMPLATE_CLASS_IMPL_CPP_ "Enable to add template class cpp." OFF)
+
+add_executable(template_class main.cpp)
+
+if(${__TEMPLATE_CLASS_IMPL_} STREQUAL "ON")
+    message(WARNING "Include template class implementation.")
+    add_compile_definitions(__TEMPLATE_CLASS_IMPL_)
+endif()
+
+if(${__TEMPLATE_CLASS_IMPL_CPP_} STREQUAL "ON")
+    message(WARNING "Include template class cpp.")
+    add_compile_definitions(__TEMPLATE_CLASS_IMPL_CPP_)
+endif()
+```
+
+**linking failure**
+
+```bash
+/usr/bin/ld: CMakeFiles/template_class.dir/main.cpp.o: in function `main':
+main.cpp:(.text+0x45): undefined reference to `MyTemplateClass<int>::printPretty() const'
+/usr/bin/ld: CMakeFiles/template_class.dir/main.cpp.o:(.data.rel.ro._ZTV15MyTemplateClassIiE[_ZTV15MyTemplateClassIiE]+0x10): undefined reference to `MyTemplateClass<int>::printPretty() const'
+collect2: error: ld returned 1 exit status
+make[2]: *** [CMakeFiles/template_class.dir/build.make:100: template_class] Error 1
+make[1]: *** [CMakeFiles/Makefile2:87: CMakeFiles/template_class.dir/all] Error 2
+make: *** [Makefile:91: all] Error 2
+```
+
+- The template implementation is in `my_template_class.cpp` which is not compiled along with the `main.cpp` because template definitions ***are not compiled until instantiated***
+- The compiler doesn't see the implementation at the point of instantiation because `my_template_class.cpp` is not included in `main.cpp`
+- The linker cannot find the implementation, leading to linker errors
+
+####  Working
+
+`my_template_class.hpp`
+
+```c++
+#ifndef __TEMPLATE_CLASS_H_
+#define __TEMPLATE_CLASS_H_
+
+/// Template class
+
+template <typename T> class MyTemplateClass {
+public:
+  MyTemplateClass() = default;
+  MyTemplateClass(T initVal) : initVal{initVal} {}
+  virtual void printPretty() const;
+
+private:
+  T initVal;
+};
+
+#ifdef __TEMPLATE_CLASS_IMPL_
+/// Include the implementation here
+#include "my_template_class.impl"
+#elif defined(__TEMPLATE_CLASS_IMPL_CPP_)
+/// Declare the implementation here
+#include "my_template_class.cpp"
+#else
+/// Do nothing, let the compiler to fail
+#endif
+
+#endif // __TEMPLATE_CLASS_H_
+
+```
+
+`my_template_class.impl`
+
+```c++
+#include <iostream>
+
+template <typename T>
+void MyTemplateClass<T>::printPretty() const {
+  std::cout << "Init val = " << this->initVal << std::endl;
+}
+
+```
+
+`CMakeLists.txt`
+
+```cmake
+cmake_minimum_required(VERSION 3.20)
+
+set(TARGET "template_class")
+project(
+    ${TARGET}
+    VERSION 1.0.0
+    LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+option(__TEMPLATE_CLASS_IMPL_ "Enable to add template class implementation." ON)
+option(__TEMPLATE_CLASS_IMPL_CPP_ "Enable to add template class cpp." OFF)
+
+add_executable(template_class main.cpp)
+
+if(${__TEMPLATE_CLASS_IMPL_} STREQUAL "ON")
+    message(WARNING "Include template class implementation.")
+    add_compile_definitions(__TEMPLATE_CLASS_IMPL_)
+endif()
+
+if(${__TEMPLATE_CLASS_IMPL_CPP_} STREQUAL "ON")
+    message(WARNING "Include template class cpp.")
+    add_compile_definitions(__TEMPLATE_CLASS_IMPL_CPP_)
+endif()
+```
+
+> Include the implementation in the template class header file, if it is crucial to separate the implementation from the header file
+
+##### alternative solution
+
+1. define everything in the template class header file
+
+2. include the implementation file in the header file (seems rarely used)
+
+3. explicit instantiation to force the compiler to generate code for the specific types (see below)
+
+##### solution 3
+
+`my_template_class_explicit_instantiation.cpp`
+
+```c++
+#include <iostream>
+#include "my_template_class.hpp"
+
+template <typename T>
+void MyTemplateClass<T>::printPretty() const {
+  std::cout << "Init val = " << this->initVal << std::endl;
+}
+
+/// Force the compiler to generate code for the template classes with int / float / double type
+template class MyTemplateClass<int>;
+template class MyTemplateClass<float>;
+template class MyTemplateClass<double>;
+```
+
+`CMakeLists.txt`
+
+```cmake
+cmake_minimum_required(VERSION 3.20)
+
+set(TARGET "template_class")
+project(
+    ${TARGET}
+    VERSION 1.0.0
+    LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+option(__TEMPLATE_CLASS_IMPL_ "Enable to add template class implementation." OFF)
+option(__TEMPLATE_CLASS_IMPL_CPP_ "Enable to add template class cpp." OFF)
+
+add_executable(template_class main.cpp)
+
+if(${__TEMPLATE_CLASS_IMPL_} STREQUAL "ON")
+    message(WARNING "Include template class implementation.")
+    add_compile_definitions(__TEMPLATE_CLASS_IMPL_)
+endif()
+
+if(${__TEMPLATE_CLASS_IMPL_CPP_} STREQUAL "ON")
+    message(WARNING "Include template class cpp.")
+    add_compile_definitions(__TEMPLATE_CLASS_IMPL_CPP_)
+endif()
+
+if(${__TEMPLATE_CLASS_IMPL_CPP_} STREQUAL "OFF" AND ${__TEMPLATE_CLASS_IMPL_} STREQUAL "OFF")
+    message(WARNING "Explicit instantiation of template class.")
+    target_sources(${TARGET} PRIVATE my_template_class_explicit_instantiation.cpp)
+endif()
+```
+
