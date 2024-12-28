@@ -84,3 +84,69 @@ void decompressGzipFile(const std::filesystem::path& inputPath, std::ostream& ou
 }
 ```
 
+## Template Class
+
+### Implementation separate from declaration
+
+- [ ] add detailed description to how the normal classes are compiled and associated objects are linked to each other
+
+> Template Compilation Process
+
+For **templates**, the compilation process differs from non-template classes because **templates** are *not compiled into machine code immediately*. Instead, **templates** follow a process called **delayed instantiation** (also known as lazy instantiation).
+
+- Declaration Phase (Parsing)
+  - The compiler parses the template declaration without generating any code
+  - The compiler doesn't compile the body of the template unless it is explicitly instantiated with a concrete type
+- Instantiation Phase (Type Binding)
+  - The compiler requires the entire definition of the template to generate the code, when the template is instantiated with a specific type
+  - The compiler checks whether the template definition is visible at the point of instantiation
+
+#### Not working
+
+`my_template_class.hpp`
+
+```c++
+#ifndef __TEMPLATE_CLASS_H_
+#define __TEMPLATE_CLASS_H_
+
+/// Template class
+
+template <typename T> class MyTemplateClass {
+public:
+  MyTemplateClass() = default;
+  MyTemplateClass(T initVal) : initVal{initVal} {}
+  virtual void printPretty() const;
+
+private:
+  T initVal;
+};
+
+#ifdef __TEMPLATE_CLASS_IMPL_
+/// Include the implementation here
+#include "my_template_class.impl"
+#elif defined(__TEMPLATE_CLASS_IMPL_CPP_)
+/// Declare the implementation here
+#include "my_template_class.cpp"
+#else
+/// Do nothing, let the compiler to fail
+#endif
+
+#endif // __TEMPLATE_CLASS_H_
+
+```
+
+`my_template_class.cpp`
+
+```c++
+#include <iostream>
+#ifndef (__TEMPLATE_CLASS_IMPL_)
+#include "my_template_class.hpp"
+#endif
+
+template <typename T>
+void MyTemplateClass<T>::printPretty() const {
+  std::cout << "Init val = " << this->initVal << std::endl;
+}
+
+```
+
