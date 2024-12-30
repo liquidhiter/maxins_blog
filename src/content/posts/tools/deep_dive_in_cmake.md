@@ -15,3 +15,6 @@ draft: false
 
 > set it off to use the standard C++ language without any vendor-specific extensions
 
+- `CMAKE_CXX_STANDARD_REQUIRED `
+
+> enforces the specific version of the C++ standard must be supported by the compiler, usually used with the `CMAKE_CXX_STANDARD` 

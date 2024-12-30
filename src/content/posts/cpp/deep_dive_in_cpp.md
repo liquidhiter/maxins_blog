@@ -468,9 +468,69 @@ myStruct2.counter = 10;
 
 ```
 
+## `template function`
 
+> compiler shouldn't instantiate the template unless all constraints are met
 
+- bad example
 
+```c++
+template <typename T>
+T& my_min(const T& a, const T& b) {
+    return a < b ? a : b;
+}
+```
+
+- `a` and `b` must both overload the `<` operator
+  - compiler throws the error ONLY when instantiating the template and found that passed arguments don't overload the `<` operator, for example, if `a` is a struct
+
+> solution: **concepts** introduced in C++20
+
+- idea: apply constraints on the template types
+
+```c++
+template <typename T>
+concept Comparable = requires(T a, T b) {
+    { a < b } -> std::convertible_to<bool>;
+}
+
+/// Apply the above concept to the generic_min function
+//template <typename T> requires Comparable<T>
+template <Comparable T>
+T& my_min(const T& a, const T& b) {
+    return a < b ? a : b;
+}
+
+struct StructNonComparable {
+    int data;
+};
+
+using snc = StructNonComparable;
+
+snc snc1{10};
+snc snc2{20};
+/// StructNonComparable does not satisfy the Comparable concept
+std::cout << "Min: " << my_min(snc1, snc2) << std::endl;
+
+```
+
+- `template <Comparable T>` is equivalent to `template<typename T> requires Comparable<T>`
+
+```-bash
+No matching function for call to 'my_min'clang(ovl_no_viable_function_in_call)
+main.cpp(110, 4): Candidate template ignored: constraints not satisfied [with T = snc]
+main.cpp(109, 32): Because 'StructNonComparable' does not satisfy 'Comparable'
+main.cpp(105, 9): Because 'a < b' would be invalid: invalid operands to binary expression ('StructNonComparable' and 'StructNonComparable')
+function my_min
+→ T &
+Parameters:
+
+const T & a
+const T & b
+Apply the above concept to the generic_min function
+```
+
+- built-in concepts supported by C++: [Concepts library (since C++20) - cppreference.com](https://en.cppreference.com/w/cpp/concepts)
 
 
 
