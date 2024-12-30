@@ -342,3 +342,135 @@ if(${__TEMPLATE_CLASS_IMPL_CPP_} STREQUAL "OFF" AND ${__TEMPLATE_CLASS_IMPL_} ST
 endif()
 ```
 
+## `this`
+
+- `const` method
+
+```c++
+void Point::getX() const {
+    return this->x;
+}
+```
+
+> `this` underlying is **const Point*x**
+
+## `const`
+
+- `const` overloading
+  - `const` objects must be accessed via `const interface`
+
+```c++
+private:
+	const size_t logical_size;
+
+public:
+	size_t size() const;
+
+template <type T>
+size_t Vector<T>::size() const {
+    return this->logical_size;
+}
+```
+
+- what if we want to modify the returned object?
+  - **const correctness**
+
+```c++
+public:
+	const T& at(size_t index) const;
+	T& at(size_t index);
+
+/// const version
+template <type T>
+const T& Vector<T>::at(size_t index) const {
+	return elems[index];
+}
+
+/// non-const version
+template <type T>
+T& vector<T>::at(size_t index) {
+	return elems[index];
+}
+```
+
+- complicated logic
+
+> implement logic in non-const version, and cast away the `constness` of`this` pointer in the const version
+
+```c++
+/// When modification is the primary use case
+
+int&
+MyStruct::findElement(const int& elem) {
+    std::cout << "const version of findElement" << std::endl;
+    for (int i = 0; i < this->size; i++) {
+        if (this->data[i] == elem) {
+            return this->data[i];
+        }
+    }
+    throw std::runtime_error("Element not found");
+}
+
+/**
+ * non-const version of findElement
+ * const_cast is used to cast away the constness of variables.
+ */
+const int&
+MyStruct::findElement(const int& elem) const {
+    std::cout << "non-const version of findElement" << std::endl;
+    return const_cast<MyStruct*>(this)->findElement(elem);
+}
+```
+
+- counterintuitive as `const` version depends on the **mutable** behavior of the `non-const` version
+- might violate **const-correctness** as **constness** should not be casted away if the object is supposed to be const
+
+> implement logic in const version, and cast away the `constness` from the returned-result of the const version
+
+```c++
+/// When read-only operations are more common
+
+const int&
+MyStruct::findElement(const int& elem) const{
+    std::cout << "const version of findElement" << std::endl;
+    for (int i = 0; i < this->size; i++) {
+        if (this->data[i] == elem) {
+            return this->data[i];
+        }
+    }
+    throw std::runtime_error("Element not found");
+}
+
+int &
+MyStruct::findElement(const int &elem) {
+    std::cout << "non-const version of findElement" << std::endl;
+    // return const_cast<int&>(const_cast<const MyStruct*>(this)->findElement(elem));
+    return const_cast<int&>(static_cast<const MyStruct&>(*this).findElement(elem));
+}
+```
+
+- extra casting `static_cast<const MyStruct&>`
+
+## `mutable`
+
+- allows a data member of a class or struct to be modifiable even if it is part of a const object
+
+```c++
+struct MyStruct2 {
+  int data;
+  mutable int counter = 0;
+};
+
+const MyStruct2 myStruct2{5};
+/// myStruct2 is const, so we cannot modify its data member
+// myStruct2.data = 10;
+myStruct2.counter = 10;
+
+```
+
+
+
+
+
+
+
