@@ -486,6 +486,8 @@ T& my_min(const T& a, const T& b) {
 
 > solution: **concepts** introduced in C++20
 
+### concepts
+
 - idea: apply constraints on the template types
 
 ```c++
@@ -516,7 +518,7 @@ std::cout << "Min: " << my_min(snc1, snc2) << std::endl;
 
 - `template <Comparable T>` is equivalent to `template<typename T> requires Comparable<T>`
 
-```-bash
+```bash
 No matching function for call to 'my_min'clang(ovl_no_viable_function_in_call)
 main.cpp(110, 4): Candidate template ignored: constraints not satisfied [with T = snc]
 main.cpp(109, 32): Because 'StructNonComparable' does not satisfy 'Comparable'
@@ -531,6 +533,27 @@ Apply the above concept to the generic_min function
 ```
 
 - built-in concepts supported by C++: [Concepts library (since C++20) - cppreference.com](https://en.cppreference.com/w/cpp/concepts)
+- iterator concepts: [Iterator library - cppreference.com](https://en.cppreference.com/w/cpp/iterator#Iterator_concepts_.28since_C.2B.2B20.29)
 
+### Variadic Templates
 
+- template function accepts a variable number of parameters
+
+```c++
+///! Servers as the base condition for the recursive call of my_min
+template <Comparable T>
+T my_min(const T& v) {
+ 	return v;   
+}
+
+/// Variadic template
+template <Comparable T, Comparable... Args>
+T my_min(const T& a, const Args&... args) {
+    auto m = my_min(args...);
+    return a < m ? a : m;
+}
+```
+
+- `syntax`
+  - **args...**
 
